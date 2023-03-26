@@ -7,7 +7,7 @@ extern int yyparse();
 extern int yylineo;
 
 Node *Root = NULL;
-int errorNum = 0;
+int errors = 0;
 int theSameLine = 0;
 
 void myerror(char *msg)
@@ -38,7 +38,7 @@ int main(int argc, char **argv)
     yyrestart(fp);
     yyparse();
 
-    if (errorNum == 0)
+    if (errors == 0)
     {
         printTree(Root, 0);
     }

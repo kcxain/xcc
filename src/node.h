@@ -7,16 +7,14 @@
 #include <ctype.h>
 #include <stdarg.h>
 
-#define MAX_CHILD_NUM 7
 extern int yylineno;
 
-typedef struct Abstract_Tree
+typedef struct ParseTree
 {
     char name[32];
-    char text[32];
+    char value[32];
     int lineno;
-    struct Abstract_Tree *parent;
-    struct Abstract_Tree *child[MAX_CHILD_NUM];
+    struct ParseTree **child;
     int childsum;
 } Node;
 

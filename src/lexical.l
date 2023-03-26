@@ -6,7 +6,7 @@
     #include <string.h>
     #include "syntax.tab.h"
     #include "node.h"
-    extern int errorNum;
+    extern int errors;
 %}
 
 SEMI ;
@@ -83,13 +83,17 @@ LCOMMENT \/\*
 {LCOMMENT}  {
     char a = input();
     while(a != '\0'){
+        a = input();
         if(a == '*'){
             a = input();
-            if(a == '/') break;
+            if(a == '/'){
+                break;
+            }
         }
-    }
-    if(a == '\0') {
-        printf("Error type A at Line %d: Missing */.\n", yylineno);
+        if(a == '\0'){ 
+            printf("Error type A at Line %d: Missing */.\n",yylineno);
+            break;
+        }
     }
 }
 
@@ -200,7 +204,7 @@ LCOMMENT \/\*
 }
 
 {OCT_ERROR} {
-    errorNum++;
+    errors++;
     printf("Error type A at Line %d: Illegal octal number '%s'\n", yylineno, yytext);
     return INT;
 }
@@ -214,7 +218,7 @@ LCOMMENT \/\*
 }
 
 {HEX_ERROR} {
-    errorNum++;
+    errors++;
     printf("Error type A at Line %d: Illegal hexadecimal number '%s'\n", yylineno, yytext);
     return INT;
 }
@@ -235,8 +239,43 @@ LCOMMENT \/\*
     return ID;
 }
 
+((([0-9])+\.([0-9])*)|(([0-9])*\.([0-9])+))[Ee]([+-]?) {
+    // 缺少指数
+    errors++;
+    printf("Error type A at Line %d: Illegal float number '%s'\n", yylineno, yytext);
+    return FLOAT;
+}
+
+[0-9]+[Ee]([+-]?)([0-9])+ {
+    // 缺少小数点
+    errors++;
+    printf("Error type A at Line %d: Illegal float number '%s'\n", yylineno, yytext);
+    return FLOAT;
+}
+
+\.([0-9])+ {
+    // 小数点开头
+    errors++;
+    printf("Error type A at Line %d: Illegal float number '%s'\n", yylineno, yytext);
+    return FLOAT;
+}
+
+([0-9])+\. {
+    // 小数点结尾
+    errors++;
+    printf("Error type A at Line %d: Illegal float number '%s'\n", yylineno, yytext);
+    return FLOAT;
+}
+
+[0-9]([0-9]*[_A-Za-z][_A-Za-z0-9]*) {
+    // 数字开头的 ID
+    errors++;
+    printf("Error type A at Line %d: Illegal identifier '%s'\n", yylineno, yytext);
+    return ID;
+}
+
 {OTHER} {
-    errorNum++;
+    errors++;
     printf("Error type A at line %d: Mysterious character \"%s\".\n",yylineno,yytext);
 }
 
