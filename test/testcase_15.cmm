@@ -1,4 +1,0 @@
-int main()
-{
-	float c = 1.2E3.5;
-}

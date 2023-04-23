@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "*.cmm": "c",
+        "semantic.h": "c"
+    }
+}
