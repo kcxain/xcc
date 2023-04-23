@@ -2,7 +2,7 @@
 # ************ 遇到不明白的地方请google以及阅读手册 *************
 
 # 编译器设定和编译选项
-CC = gcc
+CC = gcc -w
 FLEX = flex
 BISON = bison
 CFLAGS = -std=c99
@@ -16,9 +16,6 @@ LFC = $(shell find ./ -name "*.l" | sed s/[^/]*\\.l/lex.yy.c/)
 YFC = $(shell find ./ -name "*.y" | sed s/[^/]*\\.y/syntax.tab.c/)
 LFO = $(LFC:.c=.o)
 YFO = $(YFC:.c=.o)
-
-# 测试文件
-TEST_FILE = test1
 
 parser: syntax $(filter-out $(LFO),$(OBJS))
 	$(CC) -o parser $(filter-out $(LFO),$(OBJS)) -lfl -ly
@@ -35,11 +32,10 @@ syntax-c: $(YFILE)
 -include $(patsubst %.o, %.d, $(OBJS))
 
 # 定义的一些伪目标
-.PHONY: clean test
-test:
-	./parser ../test/${TEST_FILE}.cmm
+.PHONY: test
 
 clean:
+	rm -f test.out
 	rm -f parser lex.yy.c syntax.tab.c syntax.tab.h syntax.output
 	rm -f $(OBJS) $(OBJS:.o=.d)
 	rm -f $(LFC) $(YFC) $(YFC:.c=.h)

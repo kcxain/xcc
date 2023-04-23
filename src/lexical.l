@@ -1,4 +1,3 @@
-%option yylineno
 %{
     #include <stdio.h>
     #include <stdlib.h>
@@ -6,8 +5,10 @@
     #include <string.h>
     #include "syntax.tab.h"
     #include "node.h"
-    extern int errors;
+    extern int errorNum;
+    int theSameLine2 = 0;
 %}
+%option yylineno
 
 SEMI ;
 COMMA ,
@@ -42,10 +43,8 @@ HEX_ERROR [0][Xx][0-9A-Za-z]*
 INT {DECNUM}|{OCT}|{HEX}
 FLOAT [0-9]*[.][0-9]+f?
 ID [A-Za-z_][A-Za-z_0-9]*
+COMMENT "//"
 OTHER .
-COMMENT \/\/
-LCOMMENT \/\*
-
 
 %%
 
@@ -53,12 +52,10 @@ LCOMMENT \/\*
     yylval.node=createNode("SEMI",yytext);
     return(SEMI);
 }
-
 {COMMA} {
     yylval.node=createNode("COMMA",yytext);
     return(COMMA);
 }
-
 {ASSIGNOP} {
     yylval.node=createNode("ASSIGNOP",yytext);
     return ASSIGNOP;
@@ -74,126 +71,85 @@ LCOMMENT \/\*
     yylval.node=createNode("PLUS",yytext);
     return PLUS;
 }
-
 {MINUS}     {
     yylval.node=createNode("MINUS",yytext);
     return MINUS;
 }
-
-{LCOMMENT}  {
-    char a = input();
-    while(a != '\0'){
-        a = input();
-        if(a == '*'){
-            a = input();
-            if(a == '/'){
-                break;
-            }
-        }
-        if(a == '\0'){ 
-            printf("Error type A at Line %d: Missing */.\n",yylineno);
-            break;
-        }
-    }
-}
-
-{COMMENT}   {
-    char c = input();
-    while (c != '\n') c = input();
-}
-
 {STAR}      {
     yylval.node=createNode("STAR",yytext);
     return STAR;
 }
-
 {DIV}       {
     yylval.node=createNode("DIV",yytext);
     return DIV;
 }
-
 {AND}       {
     yylval.node=createNode("AND",yytext);
     return AND;
 }
-
 {OR}        {
     yylval.node=createNode("OR",yytext);
     return OR;
 }
-
 {DOT}       {
     yylval.node=createNode("DOT",yytext);
     return DOT;
 }
-
 {NOT}       {
     yylval.node=createNode("NOT",yytext);
     return NOT;
 }
-
 {TYPE}      {
     yylval.node=createNode("TYPE",yytext);
     return TYPE;
 }
-
 {LP}        {
     yylval.node=createNode("LP",yytext);
     return LP;
 }
-
 {RP}        {
     yylval.node=createNode("RP",yytext);
     return RP;
 }
-
 {LB}        {
     yylval.node=createNode("LB",yytext);
     return LB;
 }
-
 {RB}        {
     yylval.node=createNode("RB",yytext);
     return RB;
 }
-
 {LC}        {
     
     yylval.node=createNode("LC",yytext);
     return LC;
 }
-
 {RC}        {
     yylval.node=createNode("RC",yytext);
     return RC;
 }
-
 {STRUCT}    {
     yylval.node=createNode("STRUCT",yytext);
     return STRUCT;
 }
-
 {RETURN}    {
     yylval.node=createNode("RETURN",yytext);
     return RETURN;
 }
-
 {IF}        {
     yylval.node=createNode("IF",yytext);
     return IF;
 }
-
 {ELSE}      {
     yylval.node=createNode("ELSE",yytext);
     return ELSE;
 }
-
 {WHILE}     {
     yylval.node=createNode("WHILE",yytext);
     return WHILE;
 }
-
 {SPACE}     {}
+
 
 {OCT}       {
     char *end = NULL;
@@ -202,13 +158,11 @@ LCOMMENT \/\*
     yylval.node=createNode("INT",yytext);
     return INT;
 }
-
 {OCT_ERROR} {
-    errors++;
+    errorNum++;
     printf("Error type A at Line %d: Illegal octal number '%s'\n", yylineno, yytext);
     return INT;
 }
-
 {HEX}       {
     char *end = NULL;
     int l = (int)strtol(yytext, &end, 16);
@@ -216,18 +170,15 @@ LCOMMENT \/\*
     yylval.node=createNode("INT",yytext);
     return INT;
 }
-
 {HEX_ERROR} {
-    errors++;
+    errorNum++;
     printf("Error type A at Line %d: Illegal hexadecimal number '%s'\n", yylineno, yytext);
     return INT;
 }
-
 {INT}       {
     yylval.node=createNode("INT",yytext);
     return INT;
 }
-
 {FLOAT}     {
     yylval.node=createNode("FLOAT",yytext);
     return FLOAT;
@@ -239,51 +190,22 @@ LCOMMENT \/\*
     return ID;
 }
 
-((([0-9])+\.([0-9])*)|(([0-9])*\.([0-9])+))[Ee]([+-]?) {
-    // 缺少指数
-    errors++;
-    printf("Error type A at Line %d: Illegal float number '%s'\n", yylineno, yytext);
-    return FLOAT;
-}
-
-[0-9]+[Ee]([+-]?)([0-9])+ {
-    // 缺少小数点
-    errors++;
-    printf("Error type A at Line %d: Illegal float number '%s'\n", yylineno, yytext);
-    return FLOAT;
-}
-
-\.([0-9])+ {
-    // 小数点开头
-    errors++;
-    printf("Error type A at Line %d: Illegal float number '%s'\n", yylineno, yytext);
-    return FLOAT;
-}
-
-([0-9])+\. {
-    // 小数点结尾
-    errors++;
-    printf("Error type A at Line %d: Illegal float number '%s'\n", yylineno, yytext);
-    return FLOAT;
-}
-
-[0-9]([0-9]*[_A-Za-z][_A-Za-z0-9]*) {
-    // 数字开头的 ID
-    errors++;
-    printf("Error type A at Line %d: Illegal identifier '%s'\n", yylineno, yytext);
-    return ID;
-}
-
 {OTHER} {
-    errors++;
-    printf("Error type A at line %d: Mysterious character \"%s\".\n",yylineno,yytext);
+    errorNum++;
+    if(theSameLine2 != yylineno){
+        printf("Error type A at line %d: Mysterious character \"%s\".\n",yylineno,yytext);
+        theSameLine2 = yylineno;
+    }
+    
 }
+{COMMENT} {
+        printf("Error type A at line %d: Mysterious character \"%s\".\n",yylineno,yytext);
+        theSameLine2 = yylineno;  
+}
+
 
 %%
 
 int yywrap() {
     return 1;
 }
-
-
-  

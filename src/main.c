@@ -1,13 +1,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "node.h"
+#include "semantic.h"
 
 extern void yyrestart(FILE *);
 extern int yyparse();
 extern int yylineo;
 
 Node *Root = NULL;
-int errors = 0;
+int errorNum = 0;
 int theSameLine = 0;
 
 void myerror(char *msg)
@@ -38,9 +39,11 @@ int main(int argc, char **argv)
     yyrestart(fp);
     yyparse();
 
-    if (errors == 0)
+    if (errorNum == 0)
     {
-        printTree(Root, 0);
+        // printf("there is no error\n\n");
+        initHashtable();
+        traverseTree(Root);
     }
 
     return 0;
