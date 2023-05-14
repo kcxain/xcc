@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "node.h"
+#include "intercode.h"
 
 #define HASH_SIZE 65536
 
@@ -16,13 +17,13 @@ typedef enum Kind_
     BASIC,
     ARRAY,
     STRUCTURE,
-    FUNCTION
+    FUNCTION_S
 } Kind;
 
-typedef struct Type_ *TypePtr;
-typedef struct FieldList_ *FieldList;
+typedef struct Type_t *TypePtr;
+typedef struct FieldList_t *FieldList;
 
-typedef struct Type_
+typedef struct Type_t
 {
 
     Kind kind;
@@ -48,30 +49,43 @@ typedef struct Type_
             TypePtr funcType;
             int paramNum; // number of parameters
         } function_;
-
     } u;
-} Type_;
+} Type_t;
 
-typedef struct FieldList_
+typedef struct FieldList_t
 {
     char *name;
     TypePtr type;
     FieldList tail;
-} FieldList_;
+    int collision;
+    int is_in_params;
+} FieldList_t;
 
 void traverseTree(Node *root);
-FieldList VarDec(Node *root, TypePtr basictype);
+
 TypePtr Specifier(Node *root);
 void ExtDefList(Node *root);
+
+FieldList VarDec(Node *root, TypePtr basictype, int from);
 void CompSt(Node *root, TypePtr funcType);
-void DefList(Node *root);
+
 void Stmt(Node *root, TypePtr funcType);
-TypePtr Exp(Node *root);
+TypePtr Exp(Node *root, Operand op);
+
+int getSize(TypePtr typ, int t);
+
+void DefList(Node *root);
+FieldList Def(Node *root, int from);
+FieldList DecList(Node *root, TypePtr type, int from);
+FieldList Dec(Node *root, TypePtr type, int from);
 
 unsigned int hash_pjw(char *name);
 void initHashtable();
 int insertSymbol(FieldList f);
 int TypeEqual(TypePtr type1, TypePtr type2);
-FieldList lookupSymbol(char *name, int function);
+FieldList lookupSymbol(char *name, int function); // function 1,varible 0
+void AllSymbol();
 
+int Args(Node *root, Operand argsList);
+TypePtr Cond(Node *root, Operand left, Operand right);
 #endif
